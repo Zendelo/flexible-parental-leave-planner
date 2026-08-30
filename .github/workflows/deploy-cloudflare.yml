@@ -18,13 +18,16 @@ jobs:
     name: Build and deploy
     runs-on: ubuntu-latest
     environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -41,9 +44,17 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Cloudflare deployment not configured
+        if: ${{ env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == '' }}
+        run: |
+          echo "::notice::Cloudflare deployment skipped because CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured."
+          echo "Add both repository secrets under Settings -> Secrets and variables -> Actions when you are ready to deploy."
+
       - name: Deploy to Cloudflare
-        uses: cloudflare/wrangler-action@v3
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
           command: deploy
