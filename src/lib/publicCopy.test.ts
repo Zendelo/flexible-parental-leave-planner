@@ -21,7 +21,8 @@ test('public UI includes guidance, print and non-affiliation wording', () => {
 });
 
 test('terms, privacy and rule-verification content are present', () => {
-  assert.match(legalPages, /Australian Consumer Law savings clause/);
-  assert.match(legalPages, /Calculator inputs stay on your device/);
+  assert.match(legalPages, /cannot lawfully be excluded/);
+  assert.match(legalPages, /Australian Consumer Law/);
+  assert.match(legalPages, /Calculator inputs.*stay on your device/);
   assert.match(rules, /rulesLastVerified/);
 });
