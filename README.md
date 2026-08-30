@@ -47,3 +47,35 @@ before release. Deploy the generated `dist/` directory to any static host.
 Vercel and Netlify configuration is included. If a host, analytics, contact
 service or error-reporting service is added, update `/privacy` before release
 and ensure calculator inputs are never collected.
+
+## Open source
+
+The Flexible Parental Leave Planner is open source so its calculation logic, legal-rule configuration, public holiday data, and regression tests can be reviewed publicly.
+
+- [View the source code](https://github.com/Zendelo/flexible-parental-leave-planner)
+- [Report a calculation issue](https://github.com/Zendelo/flexible-parental-leave-planner/issues/new/choose)
+
+This is an independent guidance and planning tool. It is not legal advice and is not affiliated with or endorsed by the Fair Work Ombudsman, Fair Work Commission, Australian Government, or any state or territory government.
+
+Because legislation and public holiday data can change, forks and old deployments may become outdated. Always check the version's **Rules last verified** date and compare important results with current official sources.
+
+### Official sources
+
+- [Fair Work Ombudsman](https://www.fairwork.gov.au/)
+- [Fair Work Act 2009 — Federal Register of Legislation](https://www.legislation.gov.au/C2009A00028/latest/text)
+
+### Local development
+
+```bash
+npm install
+npm run dev
+```
+
+### Validation
+
+```bash
+npm test
+npx tsc --noEmit
+npm run build
+```
+
