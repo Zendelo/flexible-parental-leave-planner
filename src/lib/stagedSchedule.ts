@@ -33,6 +33,14 @@ export type FlexibleSchedule = {
   flexibleDaysRemaining: number;
   scheduleEndDate: Date | null;
   statutoryDeadlineReached: boolean;
+  /**
+   * True once the schedule's calendar cursor actually reaches phaseTwoStartDate
+   * before running out of flexible days or hitting the statutory deadline.
+   * Not derived from phase-2 flexible-day usage: a phase 2 work pattern of
+   * 5 days/week uses zero flexible days but is still an active phase (this
+   * is app-internal scheduling logic, not a statutory term — no external
+   * source applies).
+   */
   hasActivePhaseTwo: boolean;
   totalReducedWorkCalendarDays: number;
   totalReducedWorkWeeks: number;
@@ -60,7 +68,7 @@ export const buildFlexibleLeaveSchedule = (
   input: BuildFlexibleLeaveScheduleInput,
 ): FlexibleSchedule => {
   const available = Math.max(0, Math.floor(input.availableFlexibleDays));
-  const phaseOneWeeks = typeof input.phaseOneWeeks === 'number'
+  const phaseOneWeeks = typeof input.phaseOneWeeks === 'number' && Number.isFinite(input.phaseOneWeeks)
     ? Math.max(0, Math.floor(input.phaseOneWeeks))
     : null;
   const phaseOneWorkdays = uniqueWeekdays(input.phaseOneWorkWeekdays);
@@ -77,6 +85,7 @@ export const buildFlexibleLeaveSchedule = (
   };
   let remaining = available;
   let lastFlexibleDate: Date | null = null;
+  let phaseTwoReached = false;
   let cursor = new Date(input.returnDate.getTime());
 
   while (cursor.getTime() < input.statutoryDeadlineExclusive.getTime() && remaining > 0) {
@@ -84,6 +93,7 @@ export const buildFlexibleLeaveSchedule = (
       const phase: PhaseId = !phaseTwoStartDate || cursor.getTime() < phaseTwoStartDate.getTime()
         ? 'phase1'
         : 'phase2';
+      if (phase === 'phase2') phaseTwoReached = true;
       const workdays = phase === 'phase1' ? phaseOneWorkdays : phaseTwoWorkdays;
       const holiday = holidayByDate.get(toIsoDate(cursor));
 
@@ -157,7 +167,7 @@ export const buildFlexibleLeaveSchedule = (
     flexibleDaysRemaining: remaining,
     scheduleEndDate: lastFlexibleDate,
     statutoryDeadlineReached: remaining > 0 && cursor.getTime() >= input.statutoryDeadlineExclusive.getTime(),
-    hasActivePhaseTwo: phaseUsage.phase2.used > 0,
+    hasActivePhaseTwo: phaseTwoReached,
     totalReducedWorkCalendarDays: lastFlexibleDate
       ? daysBetweenUtc(input.returnDate, lastFlexibleDate) + 1
       : 0,

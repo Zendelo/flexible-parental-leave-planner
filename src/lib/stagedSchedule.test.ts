@@ -71,6 +71,30 @@ test('12 weeks at three days then four days preserves the nominal 24 + 35 split'
   assert.equal(toIsoDate(schedule.phaseTwoStartDate!), '2027-01-11');
 });
 
+test('phase two at 5 days/week is still active even though it uses no flexible days', () => {
+  // Regression: hasActivePhaseTwo was derived from phase-2 flexible-day
+  // usage, so a full-time phase 2 (5 workdays/week, 0 flexible days) was
+  // silently reported as inactive. Verified by direct calculation against
+  // buildFlexibleLeaveSchedule on 2026-08-30 — not a statutory source, this
+  // is app-internal scheduling logic.
+  const schedule = buildFlexibleLeaveSchedule({
+    returnDate: date('2026-10-19'),
+    availableFlexibleDays: 20,
+    phaseOneWeeks: 4,
+    phaseOneWorkWeekdays: [1, 3, 5],
+    phaseTwoWorkWeekdays: [1, 2, 3, 4, 5],
+    holidays: [],
+    holidayTreatment: 'skip-flex',
+    statutoryDeadlineExclusive: deadline,
+  });
+
+  assert.equal(schedule.hasActivePhaseTwo, true);
+  assert.equal(toIsoDate(schedule.phaseTwoStartDate!), '2026-11-16');
+  assert.equal(schedule.phaseSummaries[1].flexibleDaysUsed, 0);
+  assert.equal(toIsoDate(schedule.scheduleEndDate!), '2026-11-12');
+  assert.equal(schedule.flexibleDaysRemaining, 12);
+});
+
 test('longest duration starts phase two immediately', () => {
   const schedule = buildFlexibleLeaveSchedule({
     returnDate: date('2026-10-19'),
